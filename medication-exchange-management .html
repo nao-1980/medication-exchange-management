@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>緊急時薬剤 交換管理ボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1F4E79; --navy-deep:#173A5C; --ink:#1E2A38; --sub:#5B6B7B;
+  --bg:#F3F6F9; --card:#FFFFFF; --line:#DCE4EC;
+  --red:#C0392B; --red-bg:#FBE3DC; --red-line:#EFC4B8;
+  --amber:#9A6B12; --amber-bg:#FFF3D6; --amber-line:#EFD9A2;
+  --green:#2F7D4F; --green-bg:#E3F1E7; --green-line:#C2E0CC;
+  --cream:#FFF7E0;
+  --radius:12px;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --disp:'Zen Kaku Gothic New','Noto Sans JP',sans-serif;
+  --body:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6}
+button{font-family:var(--body);cursor:pointer}
+input,select{font-family:var(--body)}
+
+/* ---------- header ---------- */
+header{background:var(--navy);color:#fff;padding:18px 0}
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.head-title{font-family:var(--disp);font-weight:900;font-size:1.45rem;letter-spacing:.03em}
+.head-title small{display:block;font-weight:500;font-size:.72rem;letter-spacing:.22em;opacity:.75;margin-bottom:2px}
+.head-date{font-family:var(--mono);font-size:.85rem;opacity:.85}
+.head-actions{display:flex;gap:8px}
+.btn-ghost{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;
+  border-radius:8px;padding:7px 14px;font-size:.82rem;font-weight:500;transition:background .15s}
+.btn-ghost:hover{background:rgba(255,255,255,.24)}
+
+/* ---------- summary board ---------- */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+.month-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px 16px;position:relative;overflow:hidden}
+.month-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px}
+.month-card.now::before{background:var(--red)}
+.month-card.next::before{background:#D9A82C}
+.mc-label{font-size:.72rem;font-weight:700;letter-spacing:.2em;color:var(--sub)}
+.mc-head{display:flex;align-items:baseline;gap:10px;margin:2px 0 10px}
+.mc-month{font-family:var(--disp);font-weight:900;font-size:1.5rem}
+.mc-count{font-family:var(--mono);font-weight:600;font-size:1.5rem}
+.mc-count small{font-size:.8rem;font-weight:500;color:var(--sub);margin-left:2px}
+.now .mc-count{color:var(--red)} .next .mc-count{color:var(--amber)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:5px 6px 5px 13px;
+  font-size:.85rem;font-weight:500;border:1px solid}
+.now .chip{background:var(--red-bg);border-color:var(--red-line)}
+.next .chip{background:var(--amber-bg);border-color:var(--amber-line)}
+.chip b{font-weight:700}
+.chip button{border:none;border-radius:999px;padding:3px 10px;font-size:.75rem;font-weight:700;color:#fff}
+.now .chip button{background:var(--red)} .next .chip button{background:#C08A18}
+.chip button:hover{filter:brightness(1.12)}
+.mc-empty{color:var(--sub);font-size:.88rem;padding:6px 0}
+
+/* ---------- sections ---------- */
+section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  margin-bottom:22px;overflow:hidden}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:14px 20px;border-bottom:1px solid var(--line)}
+.sec-title{font-family:var(--disp);font-weight:700;font-size:1.02rem;color:var(--navy);
+  display:flex;align-items:center;gap:8px}
+.sec-title::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--navy);display:inline-block}
+
+/* ---------- add form ---------- */
+.add-form{display:grid;grid-template-columns:1fr 1.4fr .9fr auto;gap:10px;padding:16px 20px;
+  background:#FBF9F2;border-bottom:1px solid var(--line)}
+.field label{display:block;font-size:.72rem;font-weight:700;color:var(--sub);margin-bottom:4px;letter-spacing:.05em}
+.field input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.92rem;
+  background:var(--cream)}
+.field input:focus{outline:2px solid var(--navy);outline-offset:0;border-color:var(--navy)}
+.btn-primary{align-self:end;background:var(--navy);color:#fff;border:none;border-radius:8px;
+  padding:9px 22px;font-size:.9rem;font-weight:700;letter-spacing:.05em;transition:background .15s}
+.btn-primary:hover{background:var(--navy-deep)}
+.form-note{grid-column:1/-1;font-size:.76rem;color:var(--sub)}
+
+/* ---------- table ---------- */
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tools input[type="search"]{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:.85rem;width:190px}
+.tools select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.85rem;background:#fff}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{background:var(--navy);color:#fff;font-size:.78rem;font-weight:700;letter-spacing:.08em;
+  padding:10px 12px;text-align:left;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+td.mono{font-family:var(--mono);font-size:.85rem;white-space:nowrap}
+tr.st-overdue td{background:var(--red-bg)}
+tr.st-next td{background:var(--amber-bg)}
+tr.st-done td{background:var(--green-bg);color:#5c6d61}
+tr.st-done td .p-name{text-decoration:line-through;text-decoration-color:#9db8a5}
+.badge{display:inline-block;border-radius:6px;padding:2px 9px;font-size:.75rem;font-weight:700;white-space:nowrap}
+.badge.overdue{background:var(--red);color:#fff}
+.badge.next{background:#D9A82C;color:#fff}
+.badge.plan{background:#E6ECF2;color:var(--sub)}
+.badge.done{background:var(--green);color:#fff}
+.tgl{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;
+  padding:4px 12px;font-size:.78rem;font-weight:700;white-space:nowrap;transition:.15s}
+.tgl:hover{background:var(--navy);color:#fff}
+.tgl.undo{border-color:#8aa08f;color:#4a6b52}
+.tgl.undo:hover{background:#4a6b52;border-color:#4a6b52;color:#fff}
+.del{border:none;background:none;color:#B9C4CE;font-size:1rem;padding:2px 6px;border-radius:6px}
+.del:hover{color:var(--red);background:var(--red-bg)}
+td input[type="month"]{border:1px solid var(--line);border-radius:6px;padding:4px 6px;
+  font-family:var(--mono);font-size:.82rem;background:transparent}
+.done-at{font-size:.7rem;color:#7d9484;display:block}
+.empty{padding:36px 20px;text-align:center;color:var(--sub)}
+.empty button{margin-top:12px}
+.btn-line{background:#fff;border:1px solid var(--navy);color:var(--navy);border-radius:8px;
+  padding:7px 16px;font-size:.85rem;font-weight:700}
+.btn-line:hover{background:var(--navy);color:#fff}
+
+/* ---------- 12-month rail ---------- */
+.rail{padding:8px 20px 18px}
+.rail-row{display:grid;grid-template-columns:120px 52px 1fr;gap:14px;align-items:start;
+  padding:11px 4px;border-bottom:1px dashed var(--line)}
+.rail-row:last-child{border-bottom:none}
+.rail-month{font-family:var(--mono);font-weight:600;font-size:.9rem;color:var(--navy)}
+.rail-row.current .rail-month{color:var(--red)}
+.rail-row.current{background:linear-gradient(90deg,#FDECEF 0%,transparent 70%);border-radius:8px}
+.rail-count{font-family:var(--mono);font-size:.9rem;color:var(--sub)}
+.rail-count b{color:var(--ink)}
+.rail-items{display:flex;flex-wrap:wrap;gap:6px;font-size:.85rem}
+.rail-pill{background:#EDF2F7;border:1px solid var(--line);border-radius:999px;padding:2px 12px}
+.rail-none{color:#AEB9C4;font-size:.84rem}
+
+footer{color:var(--sub);font-size:.76rem;text-align:center;padding:8px 0 30px}
+.save-state{font-family:var(--mono);font-size:.72rem;opacity:.8}
+
+@media(max-width:760px){
+  .board{grid-template-columns:1fr}
+  .add-form{grid-template-columns:1fr 1fr}
+  .add-form .btn-primary{grid-column:1/-1}
+  .rail-row{grid-template-columns:92px 40px 1fr;gap:8px}
+  .head-title{font-size:1.15rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-row">
+    <div>
+      <div class="head-title"><small>EMERGENCY MEDICATION</small>緊急時薬剤 交換管理ボード</div>
+      <div class="head-date" id="todayLabel"></div>
+    </div>
+    <div class="head-actions">
+      <button class="btn-ghost" id="btnExport">データ書き出し</button>
+      <button class="btn-ghost" id="btnImport">読み込み</button>
+      <input type="file" id="fileImport" accept=".json" hidden>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 今月・来月ボード -->
+  <div class="board">
+    <div class="month-card now">
+      <div class="mc-label">今月の交換</div>
+      <div class="mc-head"><span class="mc-month" id="nowMonth"></span><span class="mc-count"><span id="nowCount">0</span><small>件</small></span></div>
+      <div class="chips" id="nowChips"></div>
+    </div>
+    <div class="month-card next">
+      <div class="mc-label">来月の交換</div>
+      <div class="mc-head"><span class="mc-month" id="nextMonth"></span><span class="mc-count"><span id="nextCount">0</span><small>件</small></span></div>
+      <div class="chips" id="nextChips"></div>
+    </div>
+  </div>
+
+  <!-- 登録・一覧 -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-title">薬剤リスト</div>
+      <div class="tools">
+        <input type="search" id="search" placeholder="患者名・薬剤で検索">
+        <select id="filter">
+          <option value="all">すべて表示</option>
+          <option value="todo">未対応のみ</option>
+          <option value="overdue">🔴 要対応のみ</option>
+          <option value="done">✅ 交換済のみ</option>
+        </select>
+      </div>
+    </div>
+
+    <form class="add-form" id="addForm">
+      <div class="field"><label for="fName">患者名</label><input id="fName" required placeholder="例:山田"></div>
+      <div class="field"><label for="fDrug">薬剤名</label><input id="fDrug" list="drugList" required placeholder="例:ダイアップ坐薬6mg"><datalist id="drugList"></datalist></div>
+      <div class="field"><label for="fExp">使用期限(月)</label><input id="fExp" type="month" required></div>
+      <button class="btn-primary" type="submit">追加する</button>
+      <div class="form-note">交換予定(期限の2か月前)と状況は自動で計算されます。</div>
+    </form>
+
+    <div class="table-scroll">
+      <table id="tbl" hidden>
+        <thead><tr>
+          <th>患者名</th><th>薬剤</th><th>使用期限</th><th>交換予定</th><th>状況</th><th>操作</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyBox">
+      まだ登録がありません。上のフォームから追加してください。<br>
+      <button class="btn-line" id="btnSample">サンプルデータで試す</button>
+    </div>
+  </section>
+
+  <!-- 12か月タイムライン -->
+  <section>
+    <div class="sec-head"><div class="sec-title">月別リスト(今日から12か月・未対応のみ)</div></div>
+    <div class="rail" id="rail"></div>
+  </section>
+
+  <footer>期限の2か月前の月が「交換予定」です。 <span class="save-state" id="saveState"></span></footer>
+</div>
+
+<script>
+'use strict';
+/* ================= state ================= */
+let items = [];   // {id,name,drug,exp:"YYYY-MM",done:false,doneAt:null}
+const KEY='med-exchange-v1';
+let storageOK=false;
+
+async function loadData(){
+  try{
+    if(window.storage){
+      const r=await window.storage.get(KEY);
+      if(r&&r.value){items=JSON.parse(r.value);}
+      storageOK=true;
+    }
+  }catch(e){ if(window.storage){storageOK=true;} }
+  setSaveState();
+  render();
+}
+let saveTimer=null;
+function saveData(){
+  if(!storageOK){setSaveState();return;}
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{await window.storage.set(KEY,JSON.stringify(items));setSaveState(true);}
+    catch(e){setSaveState(false);}
+  },250);
+}
+function setSaveState(saved){
+  const el=document.getElementById('saveState');
+  el.textContent = storageOK ? (saved===false?'※保存に失敗しました':'自動保存:オン')
+                             : '※この環境では自動保存が使えません。「データ書き出し」で保存してください。';
+}
+
+/* ================= date utils ================= */
+const now=new Date();
+const curKey = now.getFullYear()*12 + now.getMonth();          // month index
+function keyOf(exp){ const [y,m]=exp.split('-').map(Number); return y*12+(m-1); }
+function dueKey(exp){ return keyOf(exp)-2; }                   // 2か月前
+function fmtKey(k){ return `${Math.floor(k/12)}年${k%12+1}月`; }
+function fmtKeyMono(k){ return `${Math.floor(k/12)}年${k%12+1}月`; }
+function statusOf(it){
+  if(it.done) return 'done';
+  const d=dueKey(it.exp);
+  if(d<=curKey) return 'overdue';
+  if(d===curKey+1) return 'next';
+  return 'plan';
+}
+const BADGE={overdue:['overdue','🔴 要対応'],next:['next','🟡 来月'],plan:['plan','⏳ 予定'],done:['done','✅ 済']};
+
+/* ================= render ================= */
+function render(){
+  renderBoard(); renderTable(); renderRail(); renderDatalist(); saveData();
+}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function renderBoard(){
+  document.getElementById('todayLabel').textContent =
+    `基準日 ${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  document.getElementById('nowMonth').textContent = `${now.getMonth()+1}月`;
+  document.getElementById('nextMonth').textContent = `${(now.getMonth()+1)%12+1}月`;
+  fillChips('now', it=>!it.done && dueKey(it.exp)<=curKey);
+  fillChips('next', it=>!it.done && dueKey(it.exp)===curKey+1);
+}
+function fillChips(kind,pred){
+  const list=items.filter(pred);
+  document.getElementById(kind+'Count').textContent=list.length;
+  const box=document.getElementById(kind+'Chips');
+  box.innerHTML = list.length===0
+    ? `<div class="mc-empty">${kind==='now'?'今月の交換はありません':'来月の交換はありません'}</div>`
+    : list.map(it=>`<span class="chip"><span><b>${esc(it.name)}</b>(${esc(it.drug)})</span>
+        <button data-done="${it.id}" title="交換済にする">✓ 済にする</button></span>`).join('');
+}
+
+function renderTable(){
+  const q=document.getElementById('search').value.trim();
+  const f=document.getElementById('filter').value;
+  const tb=document.getElementById('tbody');
+  let list=[...items].sort((a,b)=>dueKey(a.exp)-dueKey(b.exp)||a.name.localeCompare(b.name,'ja'));
+  if(q) list=list.filter(it=>(it.name+it.drug).includes(q));
+  if(f==='todo') list=list.filter(it=>!it.done);
+  if(f==='overdue') list=list.filter(it=>statusOf(it)==='overdue');
+  if(f==='done') list=list.filter(it=>it.done);
+
+  document.getElementById('tbl').hidden = items.length===0;
+  document.getElementById('emptyBox').style.display = items.length===0?'block':'none';
+
+  tb.innerHTML=list.map(it=>{
+    const st=statusOf(it), [cls,label]=BADGE[st];
+    return `<tr class="st-${st}">
+      <td class="p-name">${esc(it.name)}</td>
+      <td>${esc(it.drug)}</td>
+      <td class="mono"><input type="month" value="${it.exp}" data-exp="${it.id}" aria-label="使用期限"></td>
+      <td class="mono">${fmtKey(dueKey(it.exp))}</td>
+      <td><span class="badge ${cls}">${label}</span>${it.doneAt?`<span class="done-at">${it.doneAt} 交換</span>`:''}</td>
+      <td>${it.done
+          ?`<button class="tgl undo" data-undo="${it.id}">未対応に戻す</button>`
+          :`<button class="tgl" data-done="${it.id}">✓ 交換済</button>`}</td>
+      <td><button class="del" data-del="${it.id}" title="この行を削除">✕</button></td>
+    </tr>`;}).join('');
+}
+
+function renderRail(){
+  const box=document.getElementById('rail');
+  let html='';
+  for(let i=0;i<12;i++){
+    const k=curKey+i;
+    const list=items.filter(it=>!it.done && dueKey(it.exp)===k);
+    html+=`<div class="rail-row${i===0?' current':''}">
+      <div class="rail-month">${fmtKeyMono(k)}<span style="font-family:var(--body);font-size:.78rem"> ${i===0?'(今月)':''}</span></div>
+      <div class="rail-count"><b>${list.length}</b>件</div>
+      <div class="rail-items">${list.length
+        ? list.map(it=>`<span class="rail-pill">${esc(it.name)}(${esc(it.drug)})</span>`).join('')
+        : '<span class="rail-none">該当なし</span>'}</div>
+    </div>`;
+  }
+  box.innerHTML=html;
+}
+
+function renderDatalist(){
+  const drugs=[...new Set(items.map(i=>i.drug))];
+  ['ダイアップ坐薬6mg','ナウゼリン坐薬60mg','ブロマゼパム坐薬3mg','ソルデム3A'].forEach(d=>{if(!drugs.includes(d))drugs.push(d);});
+  document.getElementById('drugList').innerHTML=drugs.map(d=>`<option value="${esc(d)}">`).join('');
+}
+
+/* ================= events ================= */
+document.getElementById('addForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=document.getElementById('fName').value.trim();
+  const drug=document.getElementById('fDrug').value.trim();
+  const exp=document.getElementById('fExp').value;
+  if(!name||!drug||!exp)return;
+  items.push({id:crypto.randomUUID(),name,drug,exp,done:false,doneAt:null});
+  e.target.reset(); document.getElementById('fName').focus();
+  render();
+});
+
+document.body.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.dataset.done){const it=items.find(i=>i.id===b.dataset.done);
+    if(it){it.done=true;it.doneAt=`${now.getMonth()+1}/${now.getDate()}`;render();}}
+  if(b.dataset.undo){const it=items.find(i=>i.id===b.dataset.undo);
+    if(it){it.done=false;it.doneAt=null;render();}}
+  if(b.dataset.del){const it=items.find(i=>i.id===b.dataset.del);
+    if(it&&confirm(`${it.name}(${it.drug})を削除しますか?`)){items=items.filter(i=>i.id!==it.id);render();}}
+});
+document.body.addEventListener('change',e=>{
+  if(e.target.dataset.exp){const it=items.find(i=>i.id===e.target.dataset.exp);
+    if(it&&e.target.value){it.exp=e.target.value;render();}}
+});
+document.getElementById('search').addEventListener('input',renderTable);
+document.getElementById('filter').addEventListener('change',renderTable);
+
+/* export / import */
+document.getElementById('btnExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`薬剤交換データ_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+      const data=JSON.parse(r.result);
+      if(Array.isArray(data)&&data.every(d=>d.name&&d.drug&&d.exp)){items=data;render();}
+      else alert('形式が違うファイルです。書き出したJSONを選んでください。');
+    }catch(err){alert('読み込めませんでした。書き出したJSONを選んでください。');}};
+  r.readAsText(f); e.target.value='';
+});
+
+/* sample */
+document.getElementById('btnSample').addEventListener('click',()=>{
+  const y=now.getFullYear(), m=now.getMonth(); // 0-based
+  const mk=(off)=>{const d=new Date(y,m+off,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
+  items=[
+    {name:'佐藤',drug:'ダイアップ坐薬6mg',exp:mk(2)},   // 交換予定=今月
+    {name:'佐藤',drug:'ナウゼリン坐薬60mg',exp:mk(3)},  // 来月
+    {name:'鈴木',drug:'ブロマゼパム坐薬3mg',exp:mk(1)}, // 超過
+    {name:'鈴木',drug:'ソルデム3A',exp:mk(6)},
+    {name:'高橋',drug:'ダイアップ坐薬6mg',exp:mk(8)},
+  ].map(d=>({id:crypto.randomUUID(),done:false,doneAt:null,...d}));
+  render();
+});
+
+loadData();
+</script>
+</body>
+</html>
